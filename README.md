@@ -1,6 +1,6 @@
 # Pruning_PARI
 
-github URL: 
+github URL: https://github.com/DeerArthur/Pruning_PARI.git
 
 ## introduction
   This file includes the instruction you need to conduct some experiments included in the paper "Pruning the Unimportant or Reduntdant Filters? Synergy makes Better". The tools and datasets you need is listed below:
