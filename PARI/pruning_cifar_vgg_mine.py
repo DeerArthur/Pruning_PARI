@@ -512,13 +512,13 @@ class Mask:
         if len(weight_torch.size()) == 4:
             filter_pruned_num = int(weight_torch.size()[0] * prune_rate)
             weight_vec = weight_torch.view(weight_torch.size()[0], -1)
-            #计算范数大小
+            #get norm
             
             norm2 = torch.norm(weight_vec, 2, 1)
             norm2_np = norm2.cpu().numpy()
             norm2_np = norm2_np/ np.max(norm2_np)
             
-            #计算距离 (距离小的筛出)
+            #get distance
             weight_vec = weight_vec.cpu().numpy()
             similar_matrix = distance.cdist(weight_vec, weight_vec, 'euclidean')
             similar_sum = np.sum(np.abs(similar_matrix), axis=0)
