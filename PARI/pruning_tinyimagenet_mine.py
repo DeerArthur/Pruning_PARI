@@ -142,7 +142,7 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     
-    #处理图片mapping
+    #mapping
     fp = open(val_filename, 'r')
     data_val = fp.readlines()
     
@@ -294,7 +294,7 @@ def train(train_loader, model, criterion, optimizer, epoch, log, m):
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.item(), input.size(0))   ## 这里将作者的loss.data[0]修改成了loss.item()
+        losses.update(loss.item(), input.size(0))   
         top1.update(prec1.item(), input.size(0))
         top5.update(prec5.item(), input.size(0))
 
@@ -342,7 +342,7 @@ def validate(val_loader, model, criterion, log):
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.item(), input.size(0))   ## 这里将作者的loss.data[0]修改成了loss.item()
+        losses.update(loss.item(), input.size(0)) 
         top1.update(prec1.item(), input.size(0))
         top5.update(prec5.item(), input.size(0))
 
@@ -455,18 +455,18 @@ class Mask:
         if len(weight_torch.size()) == 4:
             filter_pruned_num = int(weight_torch.size()[0] * prune_rate)
             weight_vec = weight_torch.view(weight_torch.size()[0], -1)
-            # 计算范数大小
+            # get norm
             norm2 = torch.norm(weight_vec, 2, 1)
             norm2_np = norm2.cpu().numpy()
-            # 归一化到0~1
+            # normalize
             norm2_np = norm2_np / np.max(norm2_np)
 
-            # 计算距离 (距离小的筛出)
+            # get distance
             weight_vec = weight_vec.cpu().numpy()
             similar_matrix = distance.cdist(weight_vec, weight_vec, 'euclidean')
             similar_sum = np.sum(np.abs(similar_matrix), axis=0)
 
-            # 归一化到0~1
+            # normalize
             similar_sum = similar_sum / np.max(similar_sum)
 
             weight_sum = (1 - weight_factor) * norm2_np + weight_factor * similar_sum
