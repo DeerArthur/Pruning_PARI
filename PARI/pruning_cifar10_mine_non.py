@@ -158,7 +158,7 @@ def main():
     net = models.__dict__[args.arch](num_classes)
     print_log("=> network :\n {}".format(net), log)
 
-    net = torch.nn.DataParallel(net, device_ids=list(range(args.ngpu))) # 使用n个gpu并行训练
+    net = torch.nn.DataParallel(net, device_ids=list(range(args.ngpu)))
 
     # define loss function (criterion) and optimizer
     criterion = torch.nn.CrossEntropyLoss()
@@ -170,7 +170,7 @@ def main():
         net.cuda()
         criterion.cuda()
 
-    if args.use_pretrain:   #采用预训练模型？
+    if args.use_pretrain:   
         if os.path.isfile(args.pretrain_path):
             print_log("=> loading pretrain model '{}'".format(args.pretrain_path), log)
         else:
@@ -212,8 +212,8 @@ def main():
         print('function took %0.3f ms' % ((time2 - time1) * 1000.0))
         return
 
-    m = Mask(net)   #生成mask
-    m.init_length() #初始化每个Layer的长度
+    m = Mask(net)   
+    m.init_length() 
     print("-" * 10 + "one epoch begin" + "-" * 10)
 #    print("remaining ratio of pruning : Norm is %f" % args.rate_norm)
 #    print("reducing ratio of pruning : Distance is %f" % args.rate_dist)
@@ -227,7 +227,7 @@ def main():
 
     m.model = net
 
-    m.init_mask_mine(args.prune_rate, args.weight_factor) #初始化mask需要Norm剪枝率，GM剪枝率和GM距离类型
+    m.init_mask_mine(args.prune_rate, args.weight_factor)
     #    m.if_zero()
     m.do_mask_mine()
 
@@ -261,10 +261,10 @@ def main():
 
         # evaluate on validation set
         val_acc_1, val_los_1 = validate(test_loader, net, criterion, log)
-        if epoch % args.epoch_prune == 0 or epoch == args.epochs - 1:   # 判断需要做剪枝的epoch
+        if epoch % args.epoch_prune == 0 or epoch == args.epochs - 1:   
             m.model = net
             m.if_zero()
-            #current_rate_dist = args.rate_dist/ args.epochs * epoch     #使剪枝率随着epoch线性增大到预设值
+            #current_rate_dist = args.rate_dist/ args.epochs * epoch   
             current_rate = args.prune_rate
             m.init_mask_mine(current_rate, args.weight_factor)
             m.do_mask_mine()
@@ -374,9 +374,9 @@ def validate(val_loader, model, criterion, log):
 
         # measure accuracy and record loss
         prec1, prec5 = accuracy(output.data, target, topk=(1, 5))
-        losses.update(loss.item(), input.size(0))   # 原程序为loss.data[0]
-        top1.update(prec1.item(), input.size(0))    # 原程序为prec1[0]
-        top5.update(prec5.item(), input.size(0))    # 原程序为prec5[0]
+        losses.update(loss.item(), input.size(0))  
+        top1.update(prec1.item(), input.size(0))    
+        top5.update(prec5.item(), input.size(0))  
 
     print_log('  **Test** Prec@1 {top1.avg:.3f} Prec@5 {top5.avg:.3f} Error@1 {error1:.3f}'.format(top1=top1, top5=top5,
                                                                                                    error1=100 - top1.avg),
@@ -463,16 +463,16 @@ class Mask:
         if len(weight_torch.size()) == 4:
             filter_pruned_num = int(weight_torch.size()[0] * prune_rate)
             weight_vec = weight_torch.view(weight_torch.size()[0], -1)
-            #计算范数大小
+            #get norm
             norm2 = torch.norm(weight_vec, 2, 1)
             norm2_np = norm2.cpu().numpy()
             
-            #计算距离 (距离小的筛出)
+            #get distance
             weight_vec = weight_vec.cpu().numpy()
             similar_matrix = distance.cdist(weight_vec, weight_vec, 'euclidean')
             similar_sum = np.sum(np.abs(similar_matrix), axis=0)
             
-            #将范数和距离和调整到同一数量级
+            #alter norm and distance into the same magnitude
             max_norm = np.max(norm2_np)
             max_dist = np.max(similar_sum)
             delta_power = np.floor(np.log10(max_norm)) - np.floor(np.log10(max_dist))
@@ -494,9 +494,9 @@ class Mask:
         if len(weight_torch.size()) == 4:
             filter_pruned_num = int(weight_torch.size()[0] * (1 - compress_rate))
             weight_vec = weight_torch.view(weight_torch.size()[0], -1)
-            norm2 = torch.norm(weight_vec, 2, 1)    #对列求2范数
+            norm2 = torch.norm(weight_vec, 2, 1)    #get l2-norm
             norm2_np = norm2.cpu().numpy()
-            filter_index = norm2_np.argsort()[:filter_pruned_num]   #获得需要剪枝的filter的index
+            filter_index = norm2_np.argsort()[:filter_pruned_num]   
             #            norm1_sort = np.sort(norm1_np)
             #            threshold = norm1_sort[int (weight_torch.size()[0] * (1-compress_rate) )]
             kernel_length = weight_torch.size()[1] * weight_torch.size()[2] * weight_torch.size()[3]
@@ -624,7 +624,7 @@ class Mask:
 
     #        self.mask_index =  [x for x in range (0,330,3)]
     def init_mask(self, rate_norm_per_layer, rate_dist_per_layer, dist_type):
-        self.init_rate(rate_norm_per_layer, rate_dist_per_layer)    #确定每层的norm压缩率和GM压缩率
+        self.init_rate(rate_norm_per_layer, rate_dist_per_layer)    
         
         for index, item in enumerate(self.model.parameters()):
             if index in self.mask_index:
